@@ -1,0 +1,60 @@
+// Define the polynomial ring
+P<x> := PolynomialRing(Integers());
+
+// Specify the filename
+filename := "polynomials.txt";
+
+// Attempt to open the file for reading
+file := Open(filename, "r");
+
+// Initialize a list to store the data
+polynomialData := [];
+
+// Initialize a dictionary to store computed results
+computedClassGroups := AssociativeArray();
+
+// Read and process each line
+while true do
+    line := Gets(file);
+    if IsEof(line) then
+        break;
+    end if;
+
+    // Split the line into components
+    components := Split(line, " ");
+    i := StringToInteger(components[1]);
+    j := StringToInteger(components[2]);
+    q_string := Join(components[3..#components], " ");
+
+    // Convert the polynomial string to a polynomial
+    q := eval q_string;
+
+    // Append the data to the list
+    Append(~polynomialData, <i, j, q>);
+end while;
+
+// Close the file
+delete file;
+
+// Output the data
+for entry in polynomialData do
+    i := entry[1];
+    j := entry[2];
+    p := entry[3];
+
+    printf "q[%o,%o] = %o\n", i, j, p;
+
+    // Check if the polynomial has already been processed
+    if IsDefined(computedClassGroups, p) then
+        C := computedClassGroups[p]; // Retrieve previously computed class group
+    else
+        startTime := Cputime();
+        O := MaximalOrder(p);
+        SetClassGroupBounds("GRH");
+        C, m := ClassGroup(O);
+        computedClassGroups[p] := C; // Store the computed class group
+        elapsedTime := Cputime(startTime);
+        C;
+        printf "Time taken for computation: %o seconds\n", elapsedTime;
+    end if;
+end for;
